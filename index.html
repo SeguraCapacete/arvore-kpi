@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Árvore de Indicadores</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">KPI Tree</span>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-btn active" onclick="showView('tree')">
+        <span class="nav-icon">⬡</span> Árvore
+      </button>
+      <button class="nav-btn" onclick="showView('upload')">
+        <span class="nav-icon">↑</span> Importar dados
+      </button>
+      <button class="nav-btn" onclick="showView('config')">
+        <span class="nav-icon">◎</span> Configurar
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="period-label">Período ativo</div>
+      <select id="period-sel" onchange="applyPeriodFilter()">
+        <option value="all">Todos</option>
+      </select>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- VIEW: UPLOAD -->
+    <section class="view" id="view-upload">
+      <div class="view-header">
+        <h1>Importar dados</h1>
+        <p class="view-sub">Faça upload de um arquivo Excel (.xlsx) ou CSV com seus indicadores</p>
+      </div>
+
+      <div class="upload-zone" id="upload-zone"
+           ondragover="event.preventDefault(); this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="handleDrop(event)">
+        <div class="upload-icon">↑</div>
+        <div class="upload-text">Arraste seu arquivo aqui</div>
+        <div class="upload-sub">ou</div>
+        <label class="btn-primary" for="file-input">Escolher arquivo</label>
+        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileInput(event)" />
+        <div class="upload-formats">Formatos aceitos: .xlsx · .xls · .csv</div>
+      </div>
+
+      <div class="template-section">
+        <h2>Estrutura esperada do arquivo</h2>
+        <p>Seu arquivo deve conter as seguintes colunas:</p>
+        <table class="schema-table">
+          <thead>
+            <tr>
+              <th>Coluna</th><th>Tipo</th><th>Descrição</th><th>Obrigatório</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>indicador</code></td><td>texto</td><td>Nome do KPI</td><td class="tag-required">Sim</td></tr>
+            <tr><td><code>categoria</code></td><td>texto</td><td>Grupo pai (ex: Qualidade)</td><td class="tag-required">Sim</td></tr>
+            <tr><td><code>valor</code></td><td>número</td><td>Valor realizado</td><td class="tag-required">Sim</td></tr>
+            <tr><td><code>meta</code></td><td>número</td><td>Meta do período</td><td class="tag-required">Sim</td></tr>
+            <tr><td><code>unidade</code></td><td>texto</td><td>%, h, un, R$...</td><td class="tag-optional">Opcional</td></tr>
+            <tr><td><code>periodo</code></td><td>texto</td><td>Ex: Jan/2025</td><td class="tag-optional">Opcional</td></tr>
+            <tr><td><code>historico</code></td><td>números separados por ;</td><td>Últimos 6 valores</td><td class="tag-optional">Opcional</td></tr>
+          </tbody>
+        </table>
+        <button class="btn-secondary" onclick="downloadTemplate()">⬇ Baixar planilha modelo</button>
+      </div>
+    </section>
+
+    <!-- VIEW: CONFIG -->
+    <section class="view hidden" id="view-config">
+      <div class="view-header">
+        <h1>Configurar árvore</h1>
+        <p class="view-sub">Organize a hierarquia dos seus indicadores</p>
+      </div>
+      <div id="config-body">
+        <div class="empty-state">
+          <div class="empty-icon">◈</div>
+          <p>Importe um arquivo primeiro para configurar a árvore.</p>
+          <button class="btn-primary" onclick="showView('upload')">↑ Importar dados</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: TREE -->
+    <section class="view hidden" id="view-tree">
+      <div class="view-header">
+        <h1>Árvore de Indicadores</h1>
+        <p class="view-sub" id="tree-sub">Carregando dados de exemplo…</p>
+      </div>
+
+      <div id="tree-container"></div>
+
+      <div class="detail-panel hidden" id="detail-panel">
+        <button class="close-btn" onclick="closeDetail()">✕</button>
+        <div id="detail-content"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
